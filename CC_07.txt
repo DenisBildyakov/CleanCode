@@ -1,0 +1,35 @@
+clear() - removeAll()\removeAllItems()
+// Удаление всех товаров из корзины, очистка корзины
+
+updateItemsCounts() - countItems()
+// Метод пересчитывает количество товаров в корзине. Вызывается при обновлении страницы
+
+decreaseOrDeleteOneItemCount() - decreaseItem()
+// Уменьшение единиц одного товара в корзине на один. Если товар в корзине один, то удаление
+
+existChatByUsers() - isChatExist()
+// Существует ли чат для пользователя
+
+getItemsToBeModerated() - getModeratedItems
+// Возвращает товары магазина, которые подлежат модерации
+
+getItemForShop() - getShopItems()
+// Возвращат список товаров магазина
+
+getTwoMostPopularItemForShop() - getTopTwoItems()
+// Возвращает два самых популярных товара конкртеного магазина
+
+messageProcessing() - processMessage()
+// Обработка сообщения
+
+messagesViewed() - getViewedMessages()
+// Возващает список просмотренных сообщений
+
+createOrderFromBasket() - createOrder()
+// Сформировать заказ из товаров в корзине
+
+findSalesByVariousDates() - findSalesByDates()
+// Возвращает список продаж за определенную дату или диапазон дат
+
+getShopForShowcase() - getShop()
+// Возвращает магазин для показа его на главной странице
