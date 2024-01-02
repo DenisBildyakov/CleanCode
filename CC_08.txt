@@ -1,0 +1,35 @@
+---------01---------
+Figure figure = Figure.BuildWithCoordinatesAndImage(int x, int y, String image)
+// Слишком длинно
+
+Figure figure = Figure.WithCoordinatesAndImage(int x, int y, String image)
+// Сокращенный вариант
+
+Figure figure = Figure.FromXYAndImage(int x, int y, String image)
+// Самый короткий вариант. Не уверен, что самый понятный
+
+
+Move move = Move.FromStartFinishCells(Cell startCell, Cell finishCell)
+Move move = Move.FromCells(Cell startCell, Cell finishCell)
+
+
+Player player = Player.NewPlayer()
+Player player = Player.FromPlayersTeam(Team playersTeam)
+
+
+
+---------02---------
+UserRepository
+// Пример интерфейса, который применяется в паттерне DAO
+
+EntityLogic
+// Интерфейс, который имплементируют все сущности, подлежащие расчету по определенной логике
+
+DataSource
+// Источник данных - применяется в адаптерах
+
+PollableSource
+// Тоже источник данных, но применяется для "вытягивания" из БД или по REST'у
+
+Route
+// Маршрут откуда-куда данные будут переданы
