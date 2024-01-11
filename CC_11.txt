@@ -1,0 +1,111 @@
+// Код изначально писался мной в таком виде. Поэтому не могу написать как и что улучшил. Но следовал принципам, изложенным в уроке.
+
+---------1---------
+// Пишу на Java. Неявного объявления нет.
+
+
+---------2---------
+// Инициализация полей в конструкторе
+public ScodesLogic() {
+  super(new ScodesInfo());
+
+  ctScodes = subscribe(new CtScodesInfo(), this::onCtScodes, ClearPolicy.SINGLE_DELETES);
+  cuBankaccsClrVws = subscribe(new CuBankaccsClrVwInfo(), this::onCuBankaccsClr, ClearPolicy.SINGLE_DELETES)
+    .withIndex(CuBankaccsClrVw::getBankacc);
+  seBankaccsVws = subscribe(new SeBankaccsVwInfo(), this::onSeBankaccsVw, ClearPolicy.SINGLE_DELETES)
+    .withIndex(SeBankaccsVw::getBankacc);
+}
+
+// Часть метода, где объявление и инициализация переменных происходит непосредственно перед использованием
+private Set<Table> tables(KafkaTemplate<String, RawMessage> kafkaTemplate, GenerationProvider generationProvider,
+                          GenerationOffsetPublisher generationOffsetPublisher, MetricsSupplier metricsSupplier) {
+  final Set<AdapterProperties.TableProperties<?, ?>> tableProperties = adapterProperties.getTables();
+  final Set<Table> tables = new HashSet<>();
+  if (tableProperties != null) {
+    for (final AdapterProperties.TableProperties<?, ?> tp : tableProperties) {
+      if (tp.isEnabled()) {
+        log.info("For table '{}' will be created listener with open mode '{}'.", tp.getTable(), tp.getOpenMode());
+        tables.add(table(tp, kafkaTemplate, generationProvider, generationOffsetPublisher, metricsSupplier));
+...}
+
+// Объявление полей как final
+private final Map<String, Table> tables;
+private final SnapshotStorage snapshotStorage;
+private final Supplier<Map<String, String>> propertySupplier;
+
+
+---------3---------
+// Не встречал потребности при завершении работы с переменными менять их значение. Они либо на уровне класса и переиспользуются, либо на уровне метода и собираются GarbageCollector'ом.
+
+
+---------4---------
+// Часть метода, в котором переменная инициализируется непосредственно перед циклом
+{...
+final int readBytes = 0;
+while (!Thread.currentThread().isInterrupted()) {
+  if (refreshPolicy.allowRefresh()) {
+    readBytes = refresh();
+...}
+
+// Часть метода, где переменные объявляются и инициализируются непосредственно перед выполнения цикла
+// Счетчик не относится непосредственно к самому циклу, но используется в нем и обнуляется при выполнении условий
+{...
+final List<URL> listOfRequests = new ArrayList<>();
+final StringBuilder sb = new StringBuilder();
+
+sb.append(baseURL);
+int indexesCounter = 0;
+int lengthOfURL = baseURL.length();
+
+for (String index : listOfIndexes) {
+  if (indexesCounter >= 100 || (lengthOfURL + index.length() + 1) >= MAX_URL_LENGTH) {
+    try {
+      listOfRequests.add(new URL(sb.toString()));
+    } catch (MalformedURLException e) {
+      log.warn("Unable make URL from String. Cause: {}", e.getMessage());
+      log.warn("Request was lost: {}", sb);
+    }
+    sb.setLength(0);
+    sb.append(baseURL);
+    indexesCounter = 0;
+    lengthOfURL = baseURL.length();
+  }
+  sb.append(index).append(",");
+  indexesCounter++;
+  lengthOfURL += index.length() + 1;
+}
+...}
+
+// Далее примеры по аналогии с предыдущим
+private <V> K buildKey(PojoKeyFields<V> pojoKeyFields, Record record) {
+  final PojoInfo<K, V> pojoInfo = pojoKeyFields.getPojoInfo();
+  final PojoInfo.Field<V, ?>[] keyFields = pojoKeyFields.getKeyFields();
+  final V pojo = pojoInfo.createBlank();
+  for (int i = 0; i < keyFields.length; i++) {
+    final PojoInfo.Field<V, ?> keyField = keyFields[i];
+    setToPojo(pojo, keyField, record, i);
+  }
+  return pojoInfo.keyFor(pojo);
+}
+
+//
+final int size = dataNode.size();
+final List<V> pojos = new ArrayList<>(size);
+for (int i = 0; i < size; i++) {
+  pojos.add(convertValue(dataNode.get(i)));
+}
+
+//
+final ArrayList<Thread> benchmarkThreads = new ArrayList<>();
+for (int i = 1; i <= threads; i++) {
+  benchmarkThreads.add(new Thread(new KafkaBenchmark(servers, topic + "-" + i, messages), i + ""));
+}
+
+
+---------5---------
+// В основном используем проверки на null:
+if (myObject != null)
+@NotNull - для полей, особенно при маппинге JSon'а
+
+// Также существуют проверки при приведении типов:
+if (myObject instnceOf MyClass) (MyClass) myObject; 
