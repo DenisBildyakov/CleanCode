@@ -1,0 +1,85 @@
+// Здесь и ниже класс игрового поля и методы, отвечающие за его построение
+// Вначале класса константы, используемые везде в методах
+public class Board extends Group {
+    private static final int DIMENSION = 8;
+    private static final int RECTANGLE_SIZE = 40;
+
+// Сама доска объявляется и инициализируется в методе, а не как поле класса
+public Board build() {
+    Board board = new Board();
+    board.getChildren().add(buildCornersRectangles());
+    for (int y = 0; y < DIMENSION; y++) {
+        board.getChildren().add(buildNumberCoordinates(-0.5, y));
+        board.getChildren().add(buildNumberCoordinates(DIMENSION, y));
+    }
+    for (int x = 0; x < DIMENSION; x++) {
+        board.getChildren().add(buildLetterCoordinates(x, -0.5));
+        board.getChildren().add(buildLetterCoordinates(x, DIMENSION));
+    }
+    for (int y = 0; y < DIMENSION; y++) {
+        for (int x = 0; x < DIMENSION; x++) {
+// Булева переменная объявляется и инициализирется в рамках видимости цикла
+            boolean isWhite = ((x + y) & 1) == 0;
+            board.getChildren().add(buildRectangle(x, y, isWhite));
+        }
+    }
+    return board;
+}
+
+// Прямоугольник объявляется и инициализируется на уровне метода, при иницализации обращается к константам
+private Rectangle buildRectangle(int x, int y, boolean white) {
+    Rectangle rectangle = new Rectangle(x * RECTANGLE_SIZE, y * RECTANGLE_SIZE, RECTANGLE_SIZE, RECTANGLE_SIZE);
+    rectangle.setFill(white ? Color.WHITE : Color.GRAY);
+    rectangle.setStroke(Color.BLACK);
+    return rectangle;
+}
+
+// Прямоугольник объявляется и инициализируется на уровне метода, при иницализации обращается к константам
+// То же происходит с текстом
+// После текст и прямоугольник используются, чтобы наложить текстовое сообщение на доску
+private Group buildNumberCoordinates(double x, int y) {
+    Rectangle rectangle = new Rectangle(x * RECTANGLE_SIZE, y * RECTANGLE_SIZE, RECTANGLE_SIZE/2, RECTANGLE_SIZE);
+    rectangle.setFill(Color.WHITE);
+
+    Text label = new Text(Integer.toString(DIMENSION - y));
+    setTextCoordinateAndFill(rectangle, label);
+
+    return new Group(rectangle, label);
+}
+
+// Прямоугольник объявляется и инициализируется на уровне метода, при иницализации обращается к константам
+// То же происходит с текстом
+// После текст и прямоугольник используются, чтобы наложить текстовое сообщение на доску
+private Group buildLetterCoordinates(int x, double y) {
+    Rectangle rectangle = new Rectangle(x * RECTANGLE_SIZE, y * RECTANGLE_SIZE, RECTANGLE_SIZE, RECTANGLE_SIZE/2);
+    rectangle.setFill(Color.WHITE);
+
+    Text label = new Text(LetterCoordinate.getByX(x).toString());
+    setTextCoordinateAndFill(rectangle, label);
+
+    return new Group(rectangle, label);
+}
+
+
+
+// Здесь и далее класс игровой фигуры
+// Константы класса и ссылка на игровую логику
+public class Figure {
+    private static final int FIGURE_SIZE = 30;
+    private static final int MOVEMENT_FIGURE_SIZE = FIGURE_SIZE/2;
+    private static final int CELL_SIZE = 40;
+
+    @NonNull
+    private Logic logic;
+
+// Поиск нужной фигуры по координатам. Координаты определяются в рамках видимости метода
+private Cell findBy(double graphX, double graphY) {
+    int x = (int) graphX / CELL_SIZE;
+    int y = (int) graphY / CELL_SIZE;
+    for (Cell cell : Cell.values()) {
+        if (cell.getX() == x && cell.getY() == y) {
+            return cell;
+        }
+    }
+    return null;
+}
