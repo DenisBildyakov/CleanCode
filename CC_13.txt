@@ -1,0 +1,57 @@
+// Первый пример - со связыванием в конструкторе
+public class StatisticsLogic {...
+public StatisticsLogic(StatisticsLogicGenerationReadingService statisticsService) {
+  super(new StatisticsInfo());
+  statelessSubscribeDummy(new OrdersInfo(), this::onFxOrder, (reason) -> {
+    lastFxOrderno = -1;
+    fxCount = 0;
+  }, ClearPolicy.NOTIFY_ONLY);
+  statelessSubscribeDummy(new com.moex.esb.blackhole.meta.eq.trade.OrdersInfo(), this::onEqOrder, (reason) -> {
+    lastEqOrderno = -1;
+    eqCount = 0;
+  }, ClearPolicy.NOTIFY_ONLY);
+  statelessSubscribeDummy(new AuctionordersInfo(), this::onSbiAuctionOrder, (reason) -> {
+    lastSbiAuctionOrderNo = -1;
+    sbiAuctionOrdersCount = 0;
+  }, ClearPolicy.NOTIFY_ONLY);
+  statelessSubscribeDummy(new com.moex.esb.blackhole.meta.cat.AuctionordersInfo(), this::onCatAuctionOrder, (reason) -> {
+    lastCatAuctionOrderNo = -1;
+    catAuctionOrdersCount = 0;
+  }, ClearPolicy.NOTIFY_ONLY);
+  statelessSubscribeDummy(new DealInfo(), this::onFoDeal, (reason) -> {
+    switch (reason) {
+      case TABLE_CLEAR:
+        return;
+      case ROLLBACK:
+      default:
+        foCount = 0;
+    }
+  }, ClearPolicy.NOTIFY_ONLY);
+// Данные по сделкам - последняя сделка, ID сессии, поколение записи - все высчитывается отдельным классом и методом при старте приложения но во время инициализации данного класса. Раньше высчитать невозможно, так как приложение стартует и на фоне проходят совсем иные процессы. Позже высчитать тоже нельзя, так как после инициализации текущего класса начинается обработка его логики, которая зависит от полученных здесь данных.
+  LatestStatDataFromKafka calculatedDealData = statisticsService.getLatestStatDataFromKafka();
+  lastFoSessionId = calculatedDealData.lastSessionId;
+  savedFoCount = calculatedDealData.foCount;
+
+  log.info("[STATISTICS] StatisticsLogic has been created. SavedFoCount = " + savedFoCount
+    + ". LastFoSessionId = " + lastFoSessionId + ". localDealGeneration = " + localDealGeneration);
+}
+...}
+
+
+// Второй пример - со связыванием в методе
+@Override
+public boolean setUp() {
+// Здесь url берется из настроек. Сам класс с натсройками формируется Spring'ом на основе .yaml файла с конфигурацией. Сделано так потому, что более нигде url не нужен, только здесь, для проверки доступности API.
+  @NotBlank final URL url = micsProperties.getUrl();
+  final PortChecker.Reach reach = PortChecker.check(url);
+  return reach == PortChecker.Reach.SUCCESS;
+}
+
+
+// Третий пример - со связыванием в классе
+// Здесь набор статических полей класса - один логгер и три константы. Все три должны быть инициализированы как можно раньше. Логгер - чтобы писать лог, в том числе в конструкторе. Константы - чтобы отрабатывала логика, на них завязанная.
+public class MICSSource<K, V> implements PollableSource<K, V> {
+  private static final Logger log = LoggerFactory.getLogger(MICSSource.class);
+  private static final int RETRIES = 3;
+  private static final LocalTime START_TIME = LocalTime.of(8, 0);
+  private static final LocalTime END_TIME = LocalTime.of(20, 0);
