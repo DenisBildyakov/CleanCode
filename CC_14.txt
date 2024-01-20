@@ -1,0 +1,127 @@
+// На работе использование массивов практически исключено, за исключением банальных ситуаций типа String.split(), где нужен первый элемент строки.
+// Здесь и далее примеры, где используются списки и словари для хранения данных - в основном связанных с Kafka.
+// Списки и словари, преобразованные в EntrySet, используются для безопасной итерации по ним. Также списки позволяют не заботиться о начальной инициализации массива, так как являются динамически расширяемыми. Это позволяет не волноваться о логике хранения данных, независимо от их количества. Что позволяет масштабировать приложение со временем.
+// Словари позволяют хранить данные по ключу, которым зачастую является имя топика или сущности. Что позволяет создать запись один раз и далее использовать ее в разных частях приложения или в разных потоках.
+
+// Пример 1
+public List<URL> buildRequests(List<String> listOfIndexes) {
+  if (listOfIndexes.isEmpty()) {
+    log.warn("Couldn't receive list of Indexes from ICC");
+    return List.of();
+  }
+// ArrayList как хранилище разного количства запросов
+  List<URL> listOfRequests = new ArrayList<>();
+  StringBuilder sb = new StringBuilder();
+
+  sb.append(baseURL);
+  int indexesCounter = 0;
+  int lengthOfURL = baseURL.length();
+
+  for (String index : listOfIndexes) {
+    if (indexesCounter >= 100 || (lengthOfURL + index.length() + 1) >= MAX_URL_LENGTH) {
+      try {
+        listOfRequests.add(new URL(sb.toString()));
+      } catch (MalformedURLException e) {
+        log.warn("Unable make URL from String. Cause: {}", e.getMessage());
+        log.warn("Request was lost: {}", sb);
+      }
+      sb.setLength(0);
+      sb.append(baseURL);
+      indexesCounter = 0;
+      lengthOfURL = baseURL.length();
+    }
+    sb.append(index).append(",");
+    indexesCounter++;
+    lengthOfURL += index.length() + 1;
+  }
+  try {
+    listOfRequests.add(new URL(sb.toString()));
+  } catch (MalformedURLException e) {
+    log.warn("Unable make URL from String. Cause: {}", e.getMessage());
+    log.warn("Request was lost: {}", sb);
+  }
+  return listOfRequests;
+}
+
+
+
+// Пример 2
+// Класс-хранилище метрик и один из его методов, который достает счетчик по названию топика и передает в него запись
+public class ProcessorMetrics {
+  private static final Logger logger = LoggerFactory.getLogger(ProcessorMetrics.class);
+  private final MeterRegistry meterRegistry;
+  private final Map<String, Timer> topicToDecodeTimer = new HashMap<>();
+  private final Map<String, Timer> topicToCalculateTimer = new HashMap<>();
+
+  public ProcessorMetrics(MeterRegistry meterRegistry, Class<?> targetPojo, Collection<String> subscribedTopics) {
+    this.meterRegistry = meterRegistry;
+    subscribedTopics.forEach(topic -> {
+      topicToDecodeTimer.put(topic, meterRegistry.timer("await_decode", List.of(targetTag, Tag.of("source", topic))));
+      topicToCalculateTimer.put(topic, meterRegistry.timer("await_compute", List.of(targetTag, Tag.of("source", topic))));
+      topicToAppliedPartitionOffset.put(topic, new HashMap<>());
+    });
+
+...
+
+  public <T> T recordDecode(String topic, Supplier<T> function) {
+    final Timer timer = topicToDecodeTimer.get(topic);
+    if (timer == null) {
+      return function.get();
+    }
+    return timer.record(function);
+  }
+
+
+
+// Пример 3
+// Небольшой метод из контроллера, возвращающий список записей. Сложно представить как здесь использовать массив
+public List<MessageResponse> getAllMessageRecords(
+  @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime dateFrom,
+  @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime dateTo) {
+  String login = ldap.login();
+  log.debug("[HTTP][IN] Username {} requested ABS messages", login);
+  List<MessageResponse> records = service.findRecords(dateFrom, dateTo);
+  log.debug("[HTTP][OUT] ABS messages {}", records);
+  return records;
+}
+
+
+
+// Пример 4
+// Небольшой пример, где в метод, публикующий оффсеты в Зукипер передается список, по которому происходит итерация и выполняются определенные действия
+if (kafkaProducer != null) {
+  generationOffsetPublisher.sendGenerationToZK(this.outputGeneration, targetStartingOffset, outputTopic, kafkaProducer.partitionsFor(outputTopic));
+}
+
+public void sendGenerationToZK(long newestGeneration, Long startingOffset, String topicName, List<PartitionInfo> partitionInfos) {
+...
+      for (PartitionInfo partitionInfo : partitionInfos) {
+        int partition = partitionInfo.partition();
+        String currentGenerationToZK;
+	...}
+
+...}
+
+
+
+// Пример 5
+// Еще одна небольшая часть логики, где невообразимо испольовать массив, а не список
+private final List<Long> recordTimestamps = new ArrayList<>();
+
+private long consumed = 0;
+private Long lastPojoTimestamp = null;
+
+public Batch(PojoInfo<K, V> pojoInfo) {
+  this.pojoInfo = pojoInfo;
+  this.id = counter.incrementAndGet();
+}
+
+public void fullUpdate(K key, V value, int partition, long offset, long recordTimestamp) {
+  fullUpdates.put(key, value);
+  partialUpdates.remove(key);
+  deletes.remove(key);
+
+  this.partitionToConsumedOffset.put(partition, offset);
+  this.recordTimestamps.add(recordTimestamp);
+  consumed++;
+}
