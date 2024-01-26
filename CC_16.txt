@@ -1,0 +1,104 @@
+---------1---------
+  // от источника приходит значение вида "2020-04-03T12:35:11Z"
+  public static LocalDateTime getLocalDTFromZonedString(JsonNode parent, String field) {...}
+
+  /** Обновленные поля. Заполняются в случае, если {@link #updateType} = {@link UpdateType#PARTIAL}. */
+  private final Set<String> updatedFields;
+
+
+
+---------2---------
+// Пытаемся загрузить offset'ы расчетной сущности из ZooKeeper
+final ProcessedOffsetsInfo loadedProcessedOffsetsInfo = loadProcessedOffsets().orElse(null);
+
+// Пытаемся подключиться
+private void tryConnectionLoop(Properties consumerProperties, Properties producerProperties) {...}
+
+
+
+---------3---------
+/**
+ * Категория сообщения, которая определяет его цель и возможную логику обработки.
+ */
+public enum MessageType {
+  /** Системное уведомление или управлющее собитие. */
+  CONTROL,
+  /** Пркладное сообщение с информационным объектом. */
+  DATA,
+  /** Описание структур, схем и версионности данных информационных объектов. */
+  METADATA,
+  /** Пакеты системного назначения для мониторинга и отслеживания состояния. */
+  MONITORING
+}
+
+public class Header {
+  /** Система отправителя или источник сообщения. */
+  private final String source;
+  /** Категория сообщения, которая определяет его цель и возможную логику обработки. */
+  private final MessageType messageType;
+  /** Название типа данных и структуры тела сообщения. */
+  private final String bodyType;
+  /** Формат, в котором закодировано тело сообщения с данными. */
+  private final String bodyEncoding;
+  /** Тип обновления для сообщей типа {@link DataMessage}. */
+  private final UpdateType updateType;
+  /** Обновленные поля. Заполняются в случае, если {@link #updateType} = {@link UpdateType#PARTIAL}. */
+  private final Set<String> updatedFields;
+  /** Поколение данных. */
+  private final long generation;
+}
+
+
+
+---------4---------
+// Здесь не 100% предупреждение, скорей предупреждение+объяснение логики защиты от переполнения
+
+//защита от коллизий идентификаторов при перезапуске кластера (не чаще раза в секунду) в течение следующего года
+final long secondOfYear = Duration.between(now.withDayOfYear(1).truncatedTo(ChronoUnit.DAYS), now).getSeconds();
+
+//"конкатенация" secondOfYear c номером запроса. Это вылетезт за int. в году 31млн секунд
+//после 10000 запросов начнет увеличиваться счетчик секунд - это не страшно. 10000 POST /queries приходит за гораздо бОльший период чем 1 сек
+//таким образом, коллизий идентификаторов не возникнет
+final long initialId = secondOfYear * 10_000;
+this.queryCounter = ignite.atomicSequence("query_id", new AtomicConfiguration().setCacheMode(CacheMode.REPLICATED), initialId, true);
+
+
+
+---------5---------
+// input needs quoting !!!
+out.write(CSV_QUOTE);
+
+//экспериментально проверено, что если в dataRequestFlux есть Flux.using(resourceSupplier, ..., ...)
+//то resourceSupplier из него вызовется строго после окончания doOnComplete
+.doOnComplete(() -> {
+  if (metricsCache == null) {
+    metricsCache = ignite.cache(EntityMetrics.class.getName());
+    //не атомарные "get" и "set" - это нормально. В худшем случае будет несколько лишних вызовов Ignite.cache() - не страшно.
+  }
+
+
+
+---------6---------
+// Небольшой кусок из pom.xml. Там parent устарел и обновить его возможности нет. 
+<!-- TODO: Подтянуто руками, т.к. BOM старый и обновлять его для всего ICT рано. Как только можно будет обновить BOM -  секцию ниже можно удалить -->
+<build>
+  <plugins>
+    <plugin>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-maven-plugin</artifactId>
+    </plugin>
+    <plugin>
+...
+</build>
+
+
+{...
+//todo catch timeout exception
+if (exception != null) {
+  logger.error("Error sending message", exception);
+  ...}
+...}
+
+// Небольшой бонус от предыдущего тимлида, с которого начался всь проект. Это он сам себе напомнил
+//todo Напиши тест, ленивый уёбок!
+public class PojoInfoConverter implements Converter<String, PojoInfo<?, ?>> {...}
