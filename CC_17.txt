@@ -1,0 +1,108 @@
+// Часть комментариев взято из старого проекта интернет-магазина, который делали с товарищами. Многие комментарии написаны из рук вон плохо, но зато хорошо иллюстрируют случаи из задания. Проект около трехлетней давности и сейчас так уже не пишу.
+
+---------01---------
+// Совершенно непонятный комментарий, который ничего толком не описывает
+// this class is subscribed for Reactor mono events (Order.setStatus, OrderServiceImpl.createOrderFromBasket)
+@Component
+final public class OrderMailSender {...}
+
+// Совершенно непонятно что за плюсы и минусы. Особенно спустя три года
+    @Column(name = "dignity")
+    private String dignity; //плюсы
+
+    @Column(name = "flaw")
+    private String flaw; //минусы
+
+
+
+---------02---------
+// Бормотание в лучшем случае...
+//TODO мне кажется нужно удалить этот класс, так как он урезанная версия UserDto
+public class UserInfoDto {
+    private Long id;
+    private String phone;
+    private String firstName;
+    private String lastName;
+    private int age;
+    private LocalDate birthday;
+    private GenderDto gender;
+    private UserDto user;
+}
+
+// Еще одно бормотание
+//Картинки будем хранить в БД (для удобства, хотя это и плохая практика)
+@Entity
+@Getter
+@Setter
+@ToString
+@RequiredArgsConstructor
+@AllArgsConstructor
+@Builder
+public class Image {...}
+
+// Философский вопрос или разработчик - поклонник Шекспира? Невозможно серьезно относиться к написанному спустя три года. Стыдно и вспоминать не хочется
+        personalData.setAuthority("ROLE_USER"); // может быть ROLE_USER ???
+
+
+
+---------04---------
+// Информация о юзере
+        UserDto userDto = userMapper.toDto(userService.findById(id));
+
+//Конвертация фото пользователя
+        ImageDto image = userDto.getImage();
+
+// Очевидная информация и закомментированный код одновременно
+        // список товаров для магазина
+        List<ItemDto> items = itemMapper.toDtoList(itemService.getItemForShop(id));
+//        model.addAttribute("items",items);
+
+
+
+---------07---------
+// И шум, и избыточность комментария. Не нужен он здесь
+@Data
+public class SalesDto {
+
+    //поля класса: строки таблицы по запросу продаж товара в магазине
+
+    private String item;            //Имя товара
+    private Calendar orderDate;     //Дата заказа товара
+    private int count;              //Кол-во проданного товара в этот день
+    private BigDecimal totalSum;    //Сумма проданного товара в этот день (= price * count)
+    private BigDecimal basePrice;   //Себестоимость товара ("= basePrice" в таблице "item")
+    private BigDecimal profit;      //ПС (прибавочная стоимость) для расчета прибыли ("= price - basePrice" в таблице "item")
+    private BigDecimal totalProfit; //Общая прибыль по проданному товару в этот день ("= profit * count")
+}
+
+
+
+---------09---------
+// Информация явно для ТЗ, а не для кода
+    private AddressDto addressDetails; // информация по адресу, чтобы направлять post запросы на создание + иметь больше инфо по адресу
+
+// Еще один комментарий не в том месте
+public class Order {
+    @Transient
+    static final public int EXPIRATION_HOURS = 48; // delete oder if it's not been paid during this time
+
+
+
+---------10---------
+Стараюсь оставлять комментарии только там, где требуется пояснение, особенно в больших проектах, которые тяжело разобрать сразу.
+
+
+---------11---------
+// Код более не комментирую. Отучили
+
+//            Optional<ImageDto> mainImage = item.getImages().stream().filter(ImageDto::getIsMain).findFirst();
+//            byte[] byteLogo = Base64.getEncoder().encode(mainImage.get().getPicture());
+
+    //@JsonManagedReference
+    private ItemDto item;
+
+// Просто кто-то решил, что счет создавать не нужно
+        createChat(entityManager);
+//        createBill(entityManager);
+
+        createBasket(entityManager);
